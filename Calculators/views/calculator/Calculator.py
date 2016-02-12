@@ -1,6 +1,7 @@
 import os
 
 from Calculators import helpers
+from Calculators.models import Calculator
 
 from flask.ext.classy import FlaskView, route
 
@@ -11,18 +12,13 @@ from flask import (
 
 
 def get_calculator(calc_name):
-    # TODO get c from a database instead
+    # TODO get c from a database query instead
     c = Calculator()
     c.name = 'Compound Interest'
     c.template = calc_name + '.formula'
     if calc_name == 'BMI':
         c.name = 'Body Mass Index'
     return c
-
-
-class Calculator(object):
-    name = None
-    template = None
 
 
 class Index(FlaskView):
