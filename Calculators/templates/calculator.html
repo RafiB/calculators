@@ -1,4 +1,4 @@
-{% extends "common.html" %}
+{% extends 'common.html' %}
 
 {% block body -%}
     <div class='col-md-6'>
@@ -28,7 +28,7 @@
         {%- endset %}
 
             {{ group_before|safe }}
-            <input required type='number' step='0.01' class='form-control' name = '{{ variable }}' id='{{ variable }}'>
+            <input required type='number' step='0.01' class='form-control' name='{{ variable }}' id='{{ variable }}'>
             {{ group_after|safe -}}
 
         {%- if type != 'number' %}
@@ -44,7 +44,7 @@
           $('#calculator-form').on('submit', function(e) {
             e.preventDefault();
             var form_data = {};
-            $("#calculator-form :input").serializeArray().forEach(function(o) {
+            $('#calculator-form :input').serializeArray().forEach(function(o) {
               form_data[o.name] = o.value;
             });
 
