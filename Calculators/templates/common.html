@@ -1,0 +1,24 @@
+{% if not variables and self.formula() %}
+{% block formula %}{% endblock %}
+{% else %}
+<!DOCTYPE HTML>
+
+<html>
+  <head>
+    <title>
+      Calculators
+    </title>
+
+    <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' />
+
+    <link rel='stylesheet' type='text/css' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' media='all'>
+    {#- <link rel='stylesheet' href='{{ url_for('static', filename='css/classify.css', _external=True) }}' media='all'> #}
+
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js'></script>
+  </head>
+
+  <body class='container'>
+    {%- block body -%}{%- endblock -%}
+  </body>
+</html>
+{% endif %}

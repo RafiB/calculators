@@ -1,0 +1,12 @@
+{% extends 'calculator.html' %}
+
+{%-
+set labels = {
+  'weight': ('Weight in kg (e.g. 76.3kg)', 'kg'),
+  'height': ('Height in metres (e.g. 1.8m)', 'metres')
+}
+-%}
+
+{% block formula %}
+{{ (weight / (height ** 2)) |round|int }}
+{% endblock %}

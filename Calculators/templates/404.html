@@ -1,0 +1,16 @@
+{% extends 'common.html' %}
+{% block title %}404{% endblock %}
+
+{% block body %}
+      <div class='container'>
+        <div class='page-header'>
+          <div class='row'>
+            <div class='col-xs-12 centered'>
+              <h1>404 Page Not Found</h1>
+              <h2>This page doesn't exist, or hasn't been implemented yet.</h2>
+              {{ g.active_page }}
+            </div>
+          </div>
+        </div>
+      </div>
+{% endblock %}

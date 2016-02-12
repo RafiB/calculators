@@ -1,0 +1,62 @@
+{% extends "common.html" %}
+
+{% block body -%}
+    {% block keys %}{% endblock %}
+    <div class='col-md-6'>
+      <form method='POST' id='calculator-form'>
+        <input type='hidden' name='calculator' value='{{ calculator_name }}'>
+      {%- for variable in variables -%}
+        {%- set label = labels[variable][0] -%}
+        {%- set type = labels[variable][1] %}
+
+        <div class='form-group'>
+          <label for='{{ variable }}'>{{ label }}</label>
+
+        {%- if type != 'number' %}
+          <div class='input-group'>
+        {%- endif %}
+
+        {%- set group_before -%}
+          {%- if type in g.group_before -%}
+            <div class='input-group-addon'>{{ g.group_before[type] }}</div>
+          {%- endif -%}
+        {%- endset -%}
+
+        {%- set group_after %}
+          {%- if type in g.group_after %}
+            <div class='input-group-addon'>{{ g.group_after[type] }}</div>
+          {%- endif -%}
+        {%- endset %}
+
+            {{ group_before|safe }}
+            <input required type='number' step='0.01' class='form-control' name = '{{ variable }}' id='{{ variable }}'>
+            {{ group_after|safe -}}
+
+        {%- if type != 'number' %}
+          </div>
+        {%- endif %}
+        </div>
+      {%- endfor %}
+        <button type='submit' class='pull-right btn btn-primary'>Calculate</button>
+      </form>
+      = <span id='answer'></span>
+      <script type='text/javascript'>
+        $(function() {
+          $('#calculator-form').on('submit', function(e) {
+            e.preventDefault();
+            var form_data = {};
+            $("#calculator-form :input").serializeArray().forEach(function(o) {
+              form_data[o.name] = o.value;
+            });
+
+            $.post('{{ url_for('Endpoint:calculate') }}', form_data)
+              .done(function(data) {
+                $('#answer').text(data);
+              });
+
+            return false;
+          });
+        });
+      </script>
+    </div>
+{% endblock %}

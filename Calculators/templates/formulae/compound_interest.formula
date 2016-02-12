@@ -1,0 +1,14 @@
+{% extends 'calculator.html' %}
+
+{%-
+set labels = {
+  'P': ('Initial investment (e.g. $1000)', 'currency'),
+  'r': ('Interest rate (e.g. 30%)', 'percentage'),
+  'n': ('Number of times the interest is compounded per year', 'number'),
+  't': ('Number of years', 'number')
+}
+-%}
+
+{% block formula %}
+${{ '%0.2f' | format(P * (1 + ((r / 100) / n ))**( n * t )) }}
+{% endblock %}
