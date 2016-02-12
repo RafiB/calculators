@@ -91,6 +91,33 @@ def define_form_addons():
     }
 
 
+def get_or_create(session, model, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if not instance:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+    return instance
+
+
 @app.before_first_request
 def init_db():
     app.db.create_all()
+
+    from Calculators.models import Calculator, Tag
+    BMI_calc = get_or_create(app.db.session, Calculator, template='BMI.formula',
+                             name='Body Mass Index')
+
+    compound_interest_calc = get_or_create(app.db.session, Calculator,
+                                           template='compound_interest.formula',
+                                           name='Compound Interest')
+
+    for t in ['health', 'weight', 'fat', 'body', 'mass', 'index', 'bmi']:
+        tag = get_or_create(app.db.session, Tag, name=t)
+        BMI_calc.tags.add(tag)
+
+    for t in ['finance', 'money', 'compound', 'interest']:
+        tag = get_or_create(app.db.session, Tag, name=t)
+        compound_interest_calc.tags.add(tag)
+
+    app.db.session.commit()

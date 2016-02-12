@@ -1,66 +1,121 @@
 {% extends 'common.html' %}
 
 {% block body -%}
-    <div class='col-md-6'>
-      <form method='POST' id='calculator-form'>
-        <input type='hidden' name='calculator' value='{{ calculator_name }}'>
-      {%- for variable in variables -%}
-        {%- set label = labels[variable][0] -%}
-        {%- set type = labels[variable][1] %}
-
-        <div class='form-group'>
-          <label for='{{ variable }}'>{{ label }}</label>
-
-        {%- if type != 'number' %}
-          <div class='input-group'>
-        {%- endif %}
-
-        {%- set group_before -%}
-          {%- if type in g.group_before -%}
-            <div class='input-group-addon'>{{ g.group_before[type] }}</div>
-          {%- endif -%}
-        {%- endset -%}
-
-        {%- set group_after %}
-          {%- if type in g.group_after %}
-            <div class='input-group-addon'>{{ g.group_after[type] }}</div>
-          {%- endif -%}
-        {%- endset %}
-
-            {{ group_before|safe }}
-            <input required type='number' step='0.01' class='form-control' name='{{ variable }}' id='{{ variable }}'>
-            {{ group_after|safe -}}
-
-        {%- if type != 'number' %}
-          </div>
-        {%- endif %}
+    <div class='col-xs-12'>
+      <form id='search-box'>
+        <div group='form-group'>
+          <input class='form-control typeahead' type='text' placeholder='Find a calculator'>
         </div>
-      {%- endfor %}
-        <button type='submit' class='pull-right btn btn-primary'>Calculate</button>
       </form>
-      = <span id='answer'></span>
+    </div>
+    <div class='col-md-6'>
+      <div id='calculator-form-wrapper'>
+        <form method='POST' id='calculator-form'>
+          <input type='hidden' name='calculator' value='{{ calculator_name }}'>
+        {%- for variable in variables -%}
+          {%- set label = labels[variable][0] -%}
+          {%- set type = labels[variable][1] %}
+
+          <div class='form-group'>
+            <label for='{{ variable }}'>{{ label }}</label>
+
+          {%- if type != 'number' %}
+            <div class='input-group'>
+          {%- endif %}
+
+          {%- set group_before -%}
+            {%- if type in g.group_before -%}
+              <div class='input-group-addon'>{{ g.group_before[type] }}</div>
+            {%- endif -%}
+          {%- endset -%}
+
+          {%- set group_after %}
+            {%- if type in g.group_after %}
+              <div class='input-group-addon'>{{ g.group_after[type] }}</div>
+            {%- endif -%}
+          {%- endset %}
+
+              {{ group_before|safe }}
+              <input required type='number' step='0.01' class='form-control' name='{{ variable }}' id='{{ variable }}'>
+              {{ group_after|safe -}}
+
+          {%- if type != 'number' %}
+            </div>
+          {%- endif %}
+          </div>
+        {%- endfor %}
+        {% if variables %}
+          <button type='submit' class='pull-right btn btn-primary'>Calculate</button>
+        {% endif %}
+        {% if variables %}
+        = <span id='answer'></span><span id='form-error' style='color: red;'></span>
+        {% endif %}
+        </form>
+      </div>
       <script type='text/javascript'>
-        $(function() {
+        function process_form_fail(data) {
+          data = JSON.parse(data.responseText);
+          if ('missing' in data) {
+            data.missing.forEach(function(m) {
+              $('#'+m+'-error').show().text('This field is required.');
+            });
+          } else if ('message' in data) {
+            $('#answer').text('');
+            $('#form-error').text(data.message).show();
+          }
+        }
+
+        function set_form(page) {
+          /* We're given an HTML page in a string. Parse it and grab #calculator-form
+             from the page, then place the form into #calculator-form-wrapper on this
+             page. */
+          $('#calculator-form-wrapper').html($('#calculator-form', page));
+
+          /* Set up the form validator */
           var validator = $('#calculator-form').validate();
+
+          /* Capture the form submission */
           $('#calculator-form').on('submit', function(e) {
             e.preventDefault();
+
             var form_data = {};
             $('#calculator-form :input').serializeArray().forEach(function(o) {
               form_data[o.name] = o.value;
             });
 
             $.post('{{ url_for('Endpoint:calculate') }}', form_data, function(data) {
+              $('#form-error').hide();
               $('#answer').text(data);
             }).fail(function(data) {
-              data = JSON.parse(data.responseText);
-              if ('missing' in data) {
-                data.missing.forEach(function(m) {
-                  $('#'+m+'-error').show().text('This field is required.');
-                });
-              }
+              process_form_fail(data);
             });
 
             return false;
+          });
+        }
+
+        $(function() {
+          var calculators = new Bloodhound({
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            datumTokenizer: Bloodhound.tokenizers.whitespace,
+            remote: {
+              url: '{{ url_for('Endpoint:search_by_tags', search_string='') }}' + '%QUERY',
+              wildcard: '%QUERY'
+            }
+          });
+
+          $('input.typeahead').typeahead({
+            highlight: true
+          }, {
+            name: 'calculators',
+            source: calculators
+          });
+
+          $('input.tt-input').bind('typeahead:selected', function(obj, calc_name, name) {
+            $.post('{{ url_for('Endpoint:get_html_form_by_name') }}',
+              {'name': calc_name },
+              set_form
+            );
           });
         });
       </script>
