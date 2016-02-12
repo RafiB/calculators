@@ -19,5 +19,9 @@ def get_template_variables(template):
     formula = open(formula_descr).read()
 
     variables = meta.find_undeclared_variables(Environment().parse(formula))
+    if 'labels' in variables:
+        variables.remove('labels')
+    if 'get_labels' in variables:
+        variables.remove('get_labels')
 
     return variables, True

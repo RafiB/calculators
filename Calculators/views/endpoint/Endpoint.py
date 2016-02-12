@@ -1,4 +1,6 @@
 import os
+import ast
+import json
 
 from Calculators import helpers
 
@@ -6,6 +8,7 @@ from flask import (
     render_template,
     Response,
     request,
+    url_for,
 )
 
 from flask.ext.classy import FlaskView, route
@@ -43,12 +46,37 @@ class Endpoint(FlaskView):
             extra=True
         )
 
+        supplied = set([k for k, v in request.form.iteritems() if v])
+
         try:
             formula_vars = form_schema(request.form)
         except MultipleInvalid:
-            r = 'Dict not okay. You must supply {:} as integer or decimal ' \
-                   'args in the POST request'.format(', '.join(list(variables)))
-            return Response(r), 400
+            missing = list(variables - supplied)
+            return Response(json.dumps(
+                {
+                    'missing': missing
+                }
+            )), 400
 
         # Evaluate the formula with the variables!
         return render_template(template, **formula_vars)
+
+    @route('/calculator/<calculator>/variables')
+    def get_calculator_variables(self, calculator):
+        template = os.path.join('formulae', calculator+'.formula')
+
+        variables, success = helpers.get_template_variables(template)
+
+        if not success:
+            # TODO handle this nicely
+            return Response("Didn't find calculator {:}".format(
+                calculator)), 404
+
+        # TODO is there a way to get `labels` straight out of the template?
+        labels = ast.literal_eval(render_template(template, get_labels=True))
+        labels['calculator'] = (calculator+'.formula',)
+
+        return 'You need to supply {:} in the post request to {:}'.format(
+            {k: v[0] for k, v in labels.iteritems()},
+            url_for('Endpoint:calculate', _external=True)
+        )

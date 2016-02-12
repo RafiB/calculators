@@ -7,6 +7,6 @@ set labels = {
 }
 -%}
 
-{% block formula %}
-{{ (weight / (height ** 2)) |round|int }}
-{% endblock %}
+{%- block formula -%}
+{{ labels if get_labels else (weight / (height ** 2)) |round|int }}
+{%- endblock -%}

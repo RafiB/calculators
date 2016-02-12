@@ -41,6 +41,7 @@
       = <span id='answer'></span>
       <script type='text/javascript'>
         $(function() {
+          var validator = $('#calculator-form').validate();
           $('#calculator-form').on('submit', function(e) {
             e.preventDefault();
             var form_data = {};
@@ -48,10 +49,16 @@
               form_data[o.name] = o.value;
             });
 
-            $.post('{{ url_for('Endpoint:calculate') }}', form_data)
-              .done(function(data) {
-                $('#answer').text(data);
-              });
+            $.post('{{ url_for('Endpoint:calculate') }}', form_data, function(data) {
+              $('#answer').text(data);
+            }).fail(function(data) {
+              data = JSON.parse(data.responseText);
+              if ('missing' in data) {
+                data.missing.forEach(function(m) {
+                  $('#'+m+'-error').show().text('This field is required.');
+                });
+              }
+            });
 
             return false;
           });

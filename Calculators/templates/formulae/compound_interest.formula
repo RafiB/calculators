@@ -9,6 +9,6 @@ set labels = {
 }
 -%}
 
-{% block formula %}
-${{ '%0.2f' | format(P * (1 + ((r / 100) / n ))**( n * t )) }}
-{% endblock %}
+{%- block formula -%}
+{{ labels if get_labels else '$%0.2f' | format(P * (1 + ((r / 100) / n ))**( n * t )) }}
+{%- endblock -%}

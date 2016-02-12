@@ -96,6 +96,5 @@ Defines the API for the app.
 * Create some unit tests
 * Make the form pretty
 * Add an API endpoint to export all calculator names
-* Add an API endpoint to return the variables required for a formula, given a calculator name
 * Find a good way to do UX. I'm imagining dynamic form-loading, for one.
 * Add a backend for formula maintenance. I'm imagining a code editor, easily adding and removing tags, etc.
