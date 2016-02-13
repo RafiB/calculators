@@ -6,10 +6,12 @@
         <div group='form-group'>
           <input class='form-control typeahead' type='text' placeholder='Find a calculator'>
         </div>
+        <span id='permalink'></span>
       </form>
     </div>
     <div class='col-md-6'>
       <div id='calculator-form-wrapper'>
+      {% if variables %}
         <form method='POST' id='calculator-form'>
           <input type='hidden' name='calculator' value='{{ calculator_name }}'>
         {%- for variable in variables -%}
@@ -44,13 +46,10 @@
           {%- endif %}
           </div>
         {%- endfor %}
-        {% if variables %}
           <button type='submit' class='pull-right btn btn-primary'>Calculate</button>
-        {% endif %}
-        {% if variables %}
-        = <span id='answer'></span><span id='form-error' style='color: red;'></span>
-        {% endif %}
+          = <span id='answer'></span><span id='form-error' style='color: red;'></span>
         </form>
+      {% endif %}
       </div>
       <script type='text/javascript'>
         function process_form_fail(data) {
@@ -96,8 +95,8 @@
 
         $(function() {
           var calculators = new Bloodhound({
-            queryTokenizer: Bloodhound.tokenizers.whitespace,
             datumTokenizer: Bloodhound.tokenizers.whitespace,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
             remote: {
               url: '{{ url_for('Endpoint:search_by_tags', search_string='') }}' + '%QUERY',
               wildcard: '%QUERY'
@@ -108,12 +107,26 @@
             highlight: true
           }, {
             name: 'calculators',
+            displayKey: 'name',
+            templates: {
+              suggestion: function(data) {
+                return '<p><strong>' + data.name + '</strong> (' + data.tags.join(', ') + ')</p>';
+              }
+            },
             source: calculators
           });
 
-          $('input.tt-input').bind('typeahead:selected', function(obj, calc_name, name) {
-            $.post('{{ url_for('Endpoint:get_html_form_by_name') }}',
-              {'name': calc_name },
+          $('input.tt-input').bind('typeahead:selected', function(obj, datum, name) {
+            var link = '{{ url_for('Index:calculator_permalink_1', _external=True) }}/' + datum.id;
+            var permalink = $('<a>', {
+              text: 'Permalink: ' + link,
+              href: link
+            });
+
+            $('#permalink').html(permalink).show();
+
+            $.post('{{ url_for('Endpoint:get_html_form_by_id') }}',
+              {'id': datum.id},
               set_form
             );
           });

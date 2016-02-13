@@ -112,7 +112,7 @@ def init_db():
                                            template='compound_interest.formula',
                                            name='Compound Interest')
 
-    for t in ['health', 'weight', 'fat', 'body', 'mass', 'index', 'bmi']:
+    for t in ['health', 'weight', 'fat', 'body', 'mass', 'index', 'BMI']:
         tag = get_or_create(app.db.session, Tag, name=t)
         BMI_calc.tags.add(tag)
 
