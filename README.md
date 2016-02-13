@@ -91,7 +91,6 @@ Defines the API for the app.
 ## Remaining work, in no particular order
 
 * Fix up all of the TODOs
-* Add an API endpoint to export all calculator names
 * Make the form pretty
 * Create some unit tests
 * Add a backend for formula maintenance. I'm imagining a code editor, easily adding and removing tags, etc.

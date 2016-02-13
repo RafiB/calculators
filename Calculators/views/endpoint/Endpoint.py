@@ -70,9 +70,28 @@ class Endpoint(FlaskView):
         # Evaluate the formula with the variables!
         return render_template(template, **formula_vars)
 
-    @route('/calculator/<calculator>/variables')
-    def get_calculator_variables(self, calculator):
-        template = os.path.join('formulae', calculator+'.formula')
+    @route('/calculator')
+    def dump_calculators(self):
+        calculators = Calculator.query.all()
+
+        return json.dumps({
+            'results': [
+                {'id': c.id,
+                 'name': c.name,
+                 'link': url_for('Endpoint:get_calculator_variables', cid=c.id,
+                                 _external=True)
+                 } for c in calculators],
+            'size': len(calculators)
+        })
+
+    @route('/calculator/<int:cid>/variables')
+    def get_calculator_variables(self, cid):
+        calculator = Calculator.query.get(cid)
+
+        if not calculator:
+            return Response("Can't find calculator #{:}".format(cid)), 404
+
+        template = os.path.join('formulae', calculator.template)
 
         variables, success = helpers.get_template_variables(template)
 
