@@ -18,7 +18,9 @@ def get_template_variables(template):
     if not os.path.isfile(formula_descr):
         return [], False
 
-    formula = open(formula_descr).read()
+    formula = None
+    with open(formula_descr) as f:
+        formula = f.read()
 
     variables = meta.find_undeclared_variables(Environment().parse(formula))
     if 'labels' in variables:

@@ -20,8 +20,14 @@
         </div>
       </div>
 
-      <nav id='main-menu' class='main-menu'>
+      <nav id='calculator-list'>
         <input class='search' placeholder='Search' />
+        <form class='form-inline' onsubmit='return false;'>
+          <div class='form-group'>
+            <input autocomplete='off' class='form-control' id='new-formula-name' placeholder='New name'>
+          </div>
+          <button id='new-formula' class='btn btn-primary'>Create</button>
+        </form>
         <ul class='list'></ul>
       </nav>
 
@@ -60,16 +66,16 @@
                   .text(calculator.name)
               )
             )
-            .appendTo($('.main-menu ul'));
+            .appendTo($('#calculator-list ul'));
         });
 
-        new List('main-menu', {
+        new List('calculator-list', {
           valueNames: [ 'name' ]
         });
       }
 
       function set_click_action() {
-        $('.main-menu a').click(function (data) {
+        $('#calculator-list a').click(function (data) {
           var calc = $(this);
 
           if (active_link) {
@@ -98,6 +104,22 @@
       }
 
       $(function () {
+        $('#new-formula').click(function () {
+          var name = $('#new-formula-name').val();
+          if (!name) {
+            return;
+          }
+
+          $.post('{{ url_for('Endpoint:new_formula') }}',
+            {'name': name},
+            function (data) {
+              data = JSON.parse(data);
+              create_list([data]);
+              set_click_action();
+            }
+          );
+        });
+
         $('.save').click(function () {
           $.post('{{ url_for('Endpoint:set_formula') }}',
               {id: loaded.data('id'), formula: editor.getValue()},

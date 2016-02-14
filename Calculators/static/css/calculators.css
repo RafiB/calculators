@@ -16,7 +16,7 @@ span.twitter-typeahead {
   width: 100%;
 }
 
-.tt-input, /* UPDATE: newer versions use tt-input instead of tt-query */
+.tt-input,
 .tt-hint {
   height: 30px;
   font-size: 24px;
@@ -24,7 +24,7 @@ span.twitter-typeahead {
   border: 2px solid #ccc;
 }
 
-.tt-menu { /* UPDATE: newer versions use tt-menu instead of tt-dropdown-menu */
+.tt-menu {
   background-color: #FFF;
   margin-top: 12px;
   padding: 8px 0;
@@ -38,20 +38,20 @@ span.twitter-typeahead {
   line-height: 24px;
 }
 
-.tt-suggestion.tt-cursor { /* UPDATE: newer versions use .tt-suggestion.tt-cursor */
+.tt-suggestion.tt-cursor {
   color: #fff;
   background-color: #0097cf;
 
 }
 
-.main-menu:hover,
-nav.main-menu.expanded {
+#calculator-list:hover,
+nav#calculator-list.expanded {
   width: auto;
   overflow-x: visible;
   overflow-y: scroll;
 }
 
-.main-menu {
+#calculator-list {
   background: #fbfbfb;
   border-right: 1px solid #e5e5e5;
   width: 60px;
@@ -60,17 +60,31 @@ nav.main-menu.expanded {
   padding: 7px 0;
 }
 
-.main-menu input.search {
+#calculator-list input.search {
+  width: 100%;
   padding: 0 10px;
-  margin: 0 10px 5px;
+  margin: 0 0 5px;
   height: 36px;
 }
 
-.main-menu ul {
+#new-formula-name {
+  padding: 0 10px;
+  height: 36px;
+  min-width: 60px;
+  display: inline-block;
+}
+
+#new-formula {
+  height: 36px;
+  min-width: 60px;
+  display: inline-block;
+}
+
+#calculator-list ul {
   padding: 0;
 }
 
-.main-menu li {
+#calculator-list li {
   display: block;
   -webkit-transform: translateZ(0) scale(1,1);
   -webkit-transition: all .2s linear;
@@ -80,12 +94,12 @@ nav.main-menu.expanded {
   padding-right: 10px;
 }
 
-.main-menu li>a {
+#calculator-list li>a {
   color: #999;
   text-decoration: none;
 }
 
-.main-menu .name { 
+#calculator-list .name {
   position: relative;
   height: 36px;
   display: table-cell;
@@ -94,13 +108,13 @@ nav.main-menu.expanded {
   white-space: nowrap;
 }
 
-.main-menu li:hover>a,
-nav.main-menu li.active>a {
+#calculator-list li:hover>a,
+nav#calculator-list li.active>a {
   color: #fff;
 }
 
-.main-menu li:hover,
-nav.main-menu li.active {
+#calculator-list li:hover,
+nav#calculator-list li.active {
   background-color: #5fa2db;
   width: 100%;
 }
@@ -143,11 +157,11 @@ nav.main-menu li.active {
   position: absolute;
   left: 50%;
   display: none;
+  z-index: 9999;
 }
 
 #modified-alert {
   position: relative;
   left: -50%;
-  z-index: 9999;
   text-align: center;
 }

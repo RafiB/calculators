@@ -2,10 +2,11 @@ import os
 import ast
 import json
 
-from Calculators import app, helpers
+from Calculators import helpers
 from Calculators.models import Calculator, Tag
 
 from flask import (
+    current_app,
     redirect,
     render_template,
     Response,
@@ -114,9 +115,13 @@ class Endpoint(FlaskView):
         search_tags = search_string.split()
 
         cs = Calculator.query.filter(
-            Calculator.tags.any(
-                or_(*[func.lower(Tag.name).like('%'+t+'%')
-                      for t in search_tags])
+            or_(
+                or_(*[func.lower(Calculator.name).like('%'+t+'%')
+                      for t in search_tags]),
+                Calculator.tags.any(
+                    or_(*[func.lower(Tag.name).like('%'+t+'%')
+                        for t in search_tags])
+                )
             )
         ).all()
 
@@ -176,13 +181,14 @@ class Endpoint(FlaskView):
         if not calculator:
             return Response("Can't find calculator #{:}".format(cid)), 404
 
-        template = os.path.join(app.root_path, 'templates', 'formulae',
+        template = os.path.join(current_app.root_path, 'templates', 'formulae',
                                 calculator.template)
-        return json.dumps(
-            {
-                'template': open(template).read().strip()
-            }
-        )
+        with open(template) as f:
+            return json.dumps(
+                {
+                    'template': f.read().strip()
+                }
+            )
 
     @route('/set_formula', methods=['POST'])
     def set_formula(self):
@@ -213,8 +219,54 @@ class Endpoint(FlaskView):
 
         print okay_form
 
-        template = os.path.join(app.root_path, 'templates', 'formulae',
+        template = os.path.join(current_app.root_path, 'templates', 'formulae',
                                 calculator.template)
-        open(template, 'w').write(okay_form['formula'])
+        with open(template, 'w') as f:
+            f.write(okay_form['formula'])
 
         return json.dumps({'message': 'Saved!'})
+
+    @route('/new_formula', methods=['POST'])
+    def new_formula(self):
+        got_name = Schema(
+            {
+                'name': basestring
+            },
+            required=True,
+            extra=True
+        )
+
+        try:
+            okay_form = got_name(request.form)
+        except MultipleInvalid:
+            return Response(json.dumps(
+                {
+                    'message': 'You must include a name in the POST data.'
+                }
+            )), 400
+
+        c = Calculator(
+            name=okay_form['name'],
+            template=okay_form['name'].lower().replace(' ', '_') + '.formula'
+        )
+        current_app.db.session.add(c)
+        try:
+            current_app.db.session.commit()
+        except:
+            return Response(json.dumps(
+                {
+                    'message': 'There was an error creating the new calculator'
+                }
+            )), 500
+
+        template = os.path.join(current_app.root_path, 'templates', 'formulae',
+                                c.template)
+
+        with open(template, 'w+') as f:
+            f.write('')
+
+        return json.dumps({
+            'name': c.name,
+            'formula': c.template,
+            'id': c.id
+        })

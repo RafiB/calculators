@@ -1,7 +1,7 @@
 {% extends 'common.html' %}
 
 {% block head %}
-    {{ super() }}
+    {{ super() | safe }}
     <script type='text/javascript' src='http://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js'></script>
 {% endblock %}
 
@@ -70,16 +70,7 @@
           }
         }
 
-        function set_form(page) {
-          /* We're given an HTML page in a string. Parse it and grab #calculator-form
-             from the page, then place the form into #calculator-form-wrapper on this
-             page. */
-          $('#calculator-form-wrapper').html($('#calculator-form', page));
-
-          /* Set up the form validator */
-          var validator = $('#calculator-form').validate();
-
-          /* Capture the form submission */
+        function capture_form_submission() {
           $('#calculator-form').on('submit', function(e) {
             e.preventDefault();
 
@@ -99,6 +90,18 @@
           });
         }
 
+        function set_form(page) {
+          /* We're given an HTML page in a string. Parse it and grab #calculator-form
+             from the page, then place the form into #calculator-form-wrapper on this
+             page. */
+          $('#calculator-form-wrapper').html($('#calculator-form', page));
+
+          /* Set up the form validator */
+          var validator = $('#calculator-form').validate();
+
+          capture_form_submission();
+        }
+
         $(function() {
           var calculators = new Bloodhound({
             datumTokenizer: Bloodhound.tokenizers.whitespace,
@@ -116,11 +119,17 @@
             displayKey: 'name',
             templates: {
               suggestion: function(data) {
-                return '<p><strong>' + data.name + '</strong> (' + data.tags.join(', ') + ')</p>';
+                var res = '<p><strong>' + data.name + '</strong>';
+                if (data.tags.length) {
+                  res += ' (' + data.tags.join(', ') + ')</p>';
+                }
+                return res;
               }
             },
             source: calculators
           });
+
+          capture_form_submission();
 
           $('input.tt-input').bind('typeahead:selected', function(obj, datum, name) {
             var link = '{{ url_for('Index:calculator_permalink_1', _external=True) }}/' + datum.id;

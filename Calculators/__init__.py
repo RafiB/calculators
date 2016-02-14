@@ -105,7 +105,8 @@ def init_db():
     app.db.create_all()
 
     from Calculators.models import Calculator, Tag
-    BMI_calc = get_or_create(app.db.session, Calculator, template='BMI.formula',
+    BMI_calc = get_or_create(app.db.session, Calculator,
+                             template='body_mass_index.formula',
                              name='Body Mass Index')
 
     compound_interest_calc = get_or_create(app.db.session, Calculator,
