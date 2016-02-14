@@ -5,6 +5,7 @@
 
 <html>
   <head>
+  {% block head %}
     <title>
       Calculators
     </title>
@@ -15,12 +16,10 @@
     <link rel='stylesheet' href='{{ url_for('static', filename='css/calculators.css', _external=True) }}' media='all'>
 
     <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js'></script>
-    <script type='text/javascript' src='http://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js'></script>
     <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/corejs-typeahead/0.11.1/typeahead.bundle.min.js'></script>
+  {% endblock %}
   </head>
 
-  <body class='container'>
-    {%- block body -%}{%- endblock -%}
-  </body>
+  {%- block body -%}{%- endblock %}
 </html>
 {% endif %}

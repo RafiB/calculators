@@ -2,7 +2,7 @@ import os
 import ast
 import json
 
-from Calculators import helpers
+from Calculators import app, helpers
 from Calculators.models import Calculator, Tag
 
 from flask import (
@@ -155,3 +155,66 @@ class Endpoint(FlaskView):
 
         return redirect(url_for('Index:calculator_permalink_0',
                                 cid=okay_form['id']))
+
+    @route('/get_formula')
+    def get_formula(self):
+        got_id = Schema({'id': Coerce(int)}, required=True, extra=True)
+
+        try:
+            okay_form = got_id(request.values)
+        except MultipleInvalid:
+            return Response(json.dumps(
+                {
+                    'message': 'You must include a calculator id in the POST '
+                    'data.'
+                }
+            )), 400
+
+        cid = okay_form['id']
+        calculator = Calculator.query.get(cid)
+
+        if not calculator:
+            return Response("Can't find calculator #{:}".format(cid)), 404
+
+        template = os.path.join(app.root_path, 'templates', 'formulae',
+                                calculator.template)
+        return json.dumps(
+            {
+                'template': open(template).read().strip()
+            }
+        )
+
+    @route('/set_formula', methods=['POST'])
+    def set_formula(self):
+        got_id = Schema(
+            {
+                'id': Coerce(int),
+                'formula': basestring
+            },
+            required=True,
+            extra=True
+        )
+
+        try:
+            okay_form = got_id(request.values)
+        except MultipleInvalid:
+            return Response(json.dumps(
+                {
+                    'message': 'You must include a calculator id and formula '
+                    'in the POST data.'
+                }
+            )), 400
+
+        cid = okay_form['id']
+        calculator = Calculator.query.get(cid)
+
+        if not calculator:
+            return Response("Can't find calculator #{:}".format(cid)), 404
+
+        print okay_form
+
+        template = os.path.join(app.root_path, 'templates', 'formulae',
+                                calculator.template)
+        open(template, 'w').write(okay_form['formula'])
+
+        return json.dumps({'message': 'Saved!'})

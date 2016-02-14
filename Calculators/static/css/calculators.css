@@ -1,8 +1,14 @@
-body {
-  margin-top: 100px;
+html, body {
+  height: 100%;
+}
+
+#edit-calculators {
+  height: 100%;
+  display: flex;
 }
 
 #search-box {
+  margin-top: 100px;
   margin-bottom: 50px;
 }
 
@@ -12,47 +18,136 @@ span.twitter-typeahead {
 
 .tt-input, /* UPDATE: newer versions use tt-input instead of tt-query */
 .tt-hint {
-    width: 100%;
-    height: 30px;
-    padding: 8px 12px;
-    font-size: 24px;
-    line-height: 30px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    outline: none;
-}
-
-.tt-input {
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-}
-
-.tt-hint {
-    color: #999;
+  height: 30px;
+  font-size: 24px;
+  line-height: 30px;
+  border: 2px solid #ccc;
 }
 
 .tt-menu { /* UPDATE: newer versions use tt-menu instead of tt-dropdown-menu */
-    width: 422px;
-    margin-top: 12px;
-    padding: 8px 0;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+  background-color: #FFF;
+  margin-top: 12px;
+  padding: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }
 
 .tt-suggestion {
-    padding: 3px 20px;
-    font-size: 18px;
-    line-height: 24px;
+  padding: 3px 20px;
+  font-size: 18px;
+  line-height: 24px;
 }
 
-.tt-suggestion.tt-is-under-cursor { /* UPDATE: newer versions use .tt-suggestion.tt-cursor */
-    color: #fff;
-    background-color: #0097cf;
+.tt-suggestion.tt-cursor { /* UPDATE: newer versions use .tt-suggestion.tt-cursor */
+  color: #fff;
+  background-color: #0097cf;
 
 }
 
-.tt-suggestion p {
-    margin: 0;
+.main-menu:hover,
+nav.main-menu.expanded {
+  width: auto;
+  overflow-x: visible;
+  overflow-y: scroll;
+}
+
+.main-menu {
+  background: #fbfbfb;
+  border-right: 1px solid #e5e5e5;
+  width: 60px;
+  overflow: hidden;
+  z-index: 1000;
+  padding: 7px 0;
+}
+
+.main-menu input.search {
+  padding: 0 10px;
+  margin: 0 10px 5px;
+  height: 36px;
+}
+
+.main-menu ul {
+  padding: 0;
+}
+
+.main-menu li {
+  display: block;
+  -webkit-transform: translateZ(0) scale(1,1);
+  -webkit-transition: all .2s linear;
+  transition: all .2s linear;
+  height: 36px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.main-menu li>a {
+  color: #999;
+  text-decoration: none;
+}
+
+.main-menu .name { 
+  position: relative;
+  height: 36px;
+  display: table-cell;
+  vertical-align: middle;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.main-menu li:hover>a,
+nav.main-menu li.active>a {
+  color: #fff;
+}
+
+.main-menu li:hover,
+nav.main-menu li.active {
+  background-color: #5fa2db;
+  width: 100%;
+}
+
+#editor-wrapper {
+  flex: 1;
+}
+
+#editor-tag-bar {
+  height: 5%;
+  min-height: 20px;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+#editor {
+  position: fixed;
+  width: 94%;
+  height: 80%;
+  bottom: 10%;
+  font-size: 18px;
+}
+
+#editor-button-bar-wrapper {
+  height: 5%;
+  min-height: 20px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+#editor-button-bar {
+  position: fixed;
+  right: 50%;
+  bottom: 10px;
+}
+
+.alert-wrapper {
+  position: absolute;
+  left: 50%;
+  display: none;
+}
+
+#modified-alert {
+  position: relative;
+  left: -50%;
+  z-index: 9999;
+  text-align: center;
 }

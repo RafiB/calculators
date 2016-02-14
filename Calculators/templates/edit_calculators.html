@@ -1,0 +1,161 @@
+{% extends 'common.html' %}
+
+{% block head %}
+    {{ super() }}
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.js'></script>
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js'></script>
+{% endblock %}
+
+{% block body %}
+    <div id='edit-calculators'>
+      <div id='saved' class='alert-wrapper'>
+        <div class='alert alert-success'>Saved.</div>
+      </div>
+
+      <div id='modified' class='alert-wrapper'>
+        <div id='modified-alert' class='alert alert-danger'>
+          The template has been modified<br />
+          <button type='button' class='discard btn btn-warning'>Discard</button>
+          <button type='button' class='save btn btn-success'>Save</button>
+        </div>
+      </div>
+
+      <nav id='main-menu' class='main-menu'>
+        <input class='search' placeholder='Search' />
+        <ul class='list'></ul>
+      </nav>
+
+      <div id='editor-wrapper'>
+        <div id='editor-tag-bar'>
+          Tagbar
+        </div>
+
+        <div id='editor'></div>
+
+        <div id='editor-button-bar'>
+          <button type='button' class='discard btn btn-warning'>Discard</button>
+          <button type='button' class='save btn btn-success'>Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script type='text/javascript'>
+      var editor = null;
+      var formula = null;
+      var loaded = null;
+      var load_requested = null;
+      var active_link = null;
+
+      function create_list(calculators) {
+        calculators.forEach(function (calculator) {
+          $('<li>')
+            .html(
+              $('<a>', {
+                href: '#' + calculator.id
+              })
+              .data('id', calculator.id)
+              .html(
+                $('<span>')
+                  .addClass('name')
+                  .text(calculator.name)
+              )
+            )
+            .appendTo($('.main-menu ul'));
+        });
+
+        new List('main-menu', {
+          valueNames: [ 'name' ]
+        });
+      }
+
+      function set_click_action() {
+        $('.main-menu a').click(function (data) {
+          var calc = $(this);
+
+          if (active_link) {
+            active_link.removeClass('active');
+          }
+          active_link = calc.parents('li').addClass('active');
+
+          if (loaded && formula != editor.getValue()) {
+            load_requested = calc;
+            $('#modified').show();
+          } else {
+            $.get('{{ url_for('Endpoint:get_formula') }}',
+              {id: calc.data('id')},
+              function (data) {
+                data = JSON.parse(data);
+
+                loaded = calc;
+                formula = data.template;
+                editor.getSession().setValue(data.template, -1);
+                editor.resize();
+                $('#editor-wrapper').show();
+              }
+            );
+          }
+        });
+      }
+
+      $(function () {
+        $('.save').click(function () {
+          $.post('{{ url_for('Endpoint:set_formula') }}',
+              {id: loaded.data('id'), formula: editor.getValue()},
+              function () {
+                $('#saved').show();
+                setTimeout(function () {
+                  $('#saved').fadeOut();
+                }, 2000);
+
+                $('#modified').hide();
+
+                if (load_requested) {
+                  var clicked = load_requested;
+                  load_requested = null;
+                  loaded = null;
+                  clicked.click();
+                } else {
+                  formula = editor.getValue();
+                }
+              }
+          );
+        });
+
+        $('.discard').click(function () {
+          $('#modified').hide();
+          loaded = null;
+          formula = null;
+
+          if (load_requested) {
+            var clicked = load_requested;
+            load_requested = null;
+            clicked.click();
+          } else {
+            editor.getSession().setValue('');
+            $('#editor-wrapper').hide();
+          }
+        });
+
+        editor = ace.edit('editor');
+        editor.setTheme('ace/theme/solarized_light');
+        editor.getSession().setMode('ace/mode/python');
+        editor.getSession().setUseWrapMode(true);
+        editor.$blockScrolling = Infinity;
+        $('#editor-wrapper').hide();
+
+        $.get('{{ url_for('Endpoint:dump_calculators') }}',
+          function (data) {
+            data = JSON.parse(data);
+
+            create_list(data.results);
+            set_click_action();
+
+            if (window.location.hash.slice(1)) {
+              var link = $('a[href="' + window.location.hash + '"]');
+              link.click();
+            }
+          }
+        );
+      });
+    </script>
+{% endblock %}

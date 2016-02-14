@@ -1,6 +1,12 @@
 {% extends 'common.html' %}
 
+{% block head %}
+    {{ super() }}
+    <script type='text/javascript' src='http://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js'></script>
+{% endblock %}
+
 {% block body -%}
+  <body class='container'>
     <div class='col-xs-12'>
       <form id='search-box'>
         <div group='form-group'>
@@ -133,4 +139,5 @@
         });
       </script>
     </div>
+  </body>
 {% endblock %}
