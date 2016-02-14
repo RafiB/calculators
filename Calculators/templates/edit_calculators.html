@@ -13,10 +13,18 @@
       </div>
 
       <div id='modified' class='alert-wrapper'>
-        <div id='modified-alert' class='alert alert-danger'>
+        <div class='alert alert-danger'>
           The template has been modified<br />
           <button type='button' class='discard btn btn-warning'>Discard</button>
           <button type='button' class='save btn btn-success'>Save</button>
+        </div>
+      </div>
+
+      <div id='confirm-delete' class='alert-wrapper'>
+        <div class='alert alert-danger'>
+          Are you sure you want to delete?<br />
+          <button type='button' class='no-delete btn btn-default'>Cancel</button>
+          <button type='button' class='delete btn btn-danger'>Delete</button>
         </div>
       </div>
 
@@ -66,6 +74,13 @@
                   .text(calculator.name)
               )
             )
+            .append(
+                $('<button>')
+                  .addClass('btn btn-danger pull-right delete-calculator')
+                  .data('id', calculator.id)
+                  .text('Delete')
+                  .hide()
+            )
             .appendTo($('#calculator-list ul'));
         });
 
@@ -74,8 +89,19 @@
         });
       }
 
+      function do_delete () {
+        $.ajax({
+          url: '{{ url_for('Endpoint:delete_formula') }}',
+          type: 'DELETE',
+          data: {'id': deleting.data('id')},
+          success: function (data) {
+            deleting.parents('li').remove();
+          }
+        });
+      }
+
       function set_click_action() {
-        $('#calculator-list a').click(function (data) {
+        $('#calculator-list a').click(function () {
           var calc = $(this);
 
           if (active_link) {
@@ -101,6 +127,11 @@
             );
           }
         });
+
+        $('#calculator-list button.delete-calculator').click(function () {
+          deleting = $(this);
+          $('#confirm-delete').show();
+        });
       }
 
       $(function () {
@@ -110,14 +141,24 @@
             return;
           }
 
-          $.post('{{ url_for('Endpoint:new_formula') }}',
-            {'name': name},
-            function (data) {
+          $.ajax({
+            url: '{{ url_for('Endpoint:new_formula') }}',
+            type: 'PUT',
+            data: {'name': name},
+            success: function (data) {
               data = JSON.parse(data);
               create_list([data]);
               set_click_action();
             }
-          );
+          });
+        });
+
+        $('.delete').click(function () {
+          $('#confirm-delete').hide();
+          do_delete()
+        });
+        $('.no-delete').click(function () {
+          $('#confirm-delete').hide();
         });
 
         $('.save').click(function () {

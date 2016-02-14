@@ -226,7 +226,7 @@ class Endpoint(FlaskView):
 
         return json.dumps({'message': 'Saved!'})
 
-    @route('/new_formula', methods=['POST'])
+    @route('/new_formula', methods=['PUT'])
     def new_formula(self):
         got_name = Schema(
             {
@@ -241,7 +241,7 @@ class Endpoint(FlaskView):
         except MultipleInvalid:
             return Response(json.dumps(
                 {
-                    'message': 'You must include a name in the POST data.'
+                    'message': 'You must include a name in the PUT data.'
                 }
             )), 400
 
@@ -270,3 +270,29 @@ class Endpoint(FlaskView):
             'formula': c.template,
             'id': c.id
         })
+
+    @route('/delete_formula', methods=['DELETE'])
+    def delete_formula(self):
+        got_id = Schema({'id': Coerce(int)}, required=True, extra=True)
+
+        try:
+            okay_form = got_id(request.form)
+        except MultipleInvalid:
+            return Response(json.dumps(
+                {
+                    'message': 'You must include a calculator id in the POST '
+                    'data.'
+                }
+            )), 400
+
+        c = Calculator.query.get(okay_form['id'])
+        if c:
+            template = os.path.join(current_app.root_path, 'templates',
+                                    'formulae', c.template)
+            os.remove(template)
+            Calculator.query.filter_by(id=okay_form['id']).delete()
+            current_app.db.session.commit()
+
+            return 'Calculator #{:} deleted'.format(okay_form['id'])
+
+        return 'No calculator with id {:}'.format(okay_form['id'])

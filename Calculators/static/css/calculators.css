@@ -50,6 +50,9 @@ nav#calculator-list.expanded {
   overflow-x: visible;
   overflow-y: scroll;
 }
+#calculator-list:hover button {
+  display: inline-block !important;
+}
 
 #calculator-list {
   background: #fbfbfb;
@@ -94,9 +97,12 @@ nav#calculator-list.expanded {
   padding-right: 10px;
 }
 
-#calculator-list li>a {
+#calculator-list li a {
   color: #999;
   text-decoration: none;
+  display: inline-block;
+  width: auto;
+  vertical-align: middle;
 }
 
 #calculator-list .name {
@@ -108,8 +114,8 @@ nav#calculator-list.expanded {
   white-space: nowrap;
 }
 
-#calculator-list li:hover>a,
-nav#calculator-list li.active>a {
+#calculator-list li:hover a,
+nav#calculator-list li.active a {
   color: #fff;
 }
 
@@ -160,7 +166,7 @@ nav#calculator-list li.active {
   z-index: 9999;
 }
 
-#modified-alert {
+.alert {
   position: relative;
   left: -50%;
   text-align: center;
