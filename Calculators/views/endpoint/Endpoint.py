@@ -267,9 +267,9 @@ class Endpoint(FlaskView):
 
         return [c]
 
-    @route('/delete_formula', methods=['DELETE'])
+    @route('/delete_calculator', methods=['DELETE'])
     @validate_form_has_okay_id
-    def delete_formula(self):
+    def delete_calculator(self):
         c = Calculator.query.get(request.form['id'])
 
         template = os.path.join(current_app.root_path, 'templates',

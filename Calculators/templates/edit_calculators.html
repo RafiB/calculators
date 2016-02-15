@@ -59,6 +59,7 @@
       var loaded = null;
       var load_requested = null;
       var active_link = null;
+      var deleting = null;
 
       function create_list(calculators) {
         calculators.forEach(function (calculator) {
@@ -87,11 +88,13 @@
         new List('calculator-list', {
           valueNames: [ 'name' ]
         });
+
+        set_click_action();
       }
 
       function do_delete () {
         $.ajax({
-          url: '{{ url_for('Endpoint:delete_formula') }}',
+          url: '{{ url_for('Endpoint:delete_calculator') }}',
           type: 'DELETE',
           data: {'id': deleting.data('id')},
           success: function (data) {
@@ -140,6 +143,7 @@
           if (!name) {
             return;
           }
+          $('#new-formula-name').val('');
 
           $.ajax({
             url: '{{ url_for('Endpoint:new_formula') }}',
@@ -147,15 +151,17 @@
             data: {'name': name},
             success: function (data) {
               data = JSON.parse(data);
-              create_list([data]);
-              set_click_action();
+              create_list(data.results);
             }
           });
         });
 
         $('.delete').click(function () {
           $('#confirm-delete').hide();
-          do_delete()
+          do_delete();
+          if (deleting.parents('li')[0] == loaded.parents('li')[0]) {
+            $('#editor-wrapper').hide();
+          }
         });
         $('.no-delete').click(function () {
           $('#confirm-delete').hide();
@@ -211,7 +217,6 @@
             data = JSON.parse(data);
 
             create_list(data.results);
-            set_click_action();
 
             if (window.location.hash.slice(1)) {
               var link = $('a[href="' + window.location.hash + '"]');
