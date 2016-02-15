@@ -216,13 +216,7 @@ class Endpoint(FlaskView):
     @route('/set_formula', methods=['POST'])
     @validate_form_has_okay_id
     def set_formula(self):
-        got_formula = Schema(
-            {
-                'formula': basestring
-            },
-            required=True,
-            extra=True
-        )
+        got_formula = Schema({'formula': basestring}, required=True, extra=True)
 
         try:
             okay_form = got_formula(request.values)
@@ -236,11 +230,7 @@ class Endpoint(FlaskView):
 
         cid = request.form['id']
         calculator = Calculator.query.get(cid)
-        template = os.path.join(current_app.root_path, 'templates', 'formulae',
-                                calculator.template)
-
-        with open(template, 'w') as f:
-            f.write(okay_form['formula'])
+        helpers.write_template_file(calculator.template, formula=okay_form['formula'])
 
         return json.dumps({'message': 'Saved!'})
 
@@ -263,7 +253,7 @@ class Endpoint(FlaskView):
                 }
             )), 500
 
-        helpers.create_template_file(c.template)
+        helpers.write_template_file(c.template)
 
         return [c]
 

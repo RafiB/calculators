@@ -50,12 +50,13 @@ def get_template_variables_by_id(id):
     return success, result
 
 
-def create_template_file(template):
+def write_template_file(template, formula=None):
     template = os.path.join(app.root_path, 'templates', 'formulae',
                             template)
 
     with open(template, 'w') as f:
-        f.write('''{% extends 'calculator.html' %}
+        if formula is None:
+            formula = '''{% extends 'calculator.html' %}
 
 {%-
 set labels = {
@@ -64,4 +65,6 @@ set labels = {
 
 {%- block formula -%}
 {{ labels if get_labels else 'formula' }}
-{%- endblock -%}''')
+{%- endblock -%}'''
+
+        f.write(formula)
