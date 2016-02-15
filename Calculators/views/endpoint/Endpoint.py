@@ -45,7 +45,26 @@ def validate_form_has_okay_id(f):
     return wrapper
 
 
-def validate_form_has_okay_name(f):
+def validate_form_has_template(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        got_formula = Schema({'formula': basestring}, required=True, extra=True)
+
+        try:
+            okay_form = got_formula(request.values)
+        except MultipleInvalid:
+            return Response(json.dumps(
+                {
+                    'message': 'You must include a calculator id and formula '
+                    'in the POST data.'
+                }
+            )), 400
+
+        return f(*args, **kwargs)
+    return wrapper
+
+
+def validate_form_has_name(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         got_name = Schema({'name': basestring}, required=True, extra=True)
@@ -215,19 +234,8 @@ class Endpoint(FlaskView):
 
     @route('/set_formula', methods=['POST'])
     @validate_form_has_okay_id
+    @validate_form_has_template
     def set_formula(self):
-        got_formula = Schema({'formula': basestring}, required=True, extra=True)
-
-        try:
-            okay_form = got_formula(request.values)
-        except MultipleInvalid:
-            return Response(json.dumps(
-                {
-                    'message': 'You must include a calculator id and formula '
-                    'in the POST data.'
-                }
-            )), 400
-
         cid = request.form['id']
         calculator = Calculator.query.get(cid)
         helpers.write_template_file(calculator.template, formula=okay_form['formula'])
@@ -235,7 +243,7 @@ class Endpoint(FlaskView):
         return json.dumps({'message': 'Saved!'})
 
     @route('/new_formula', methods=['PUT'])
-    @validate_form_has_okay_name
+    @validate_form_has_name
     @format_calculators
     def new_formula(self):
         c = Calculator(
