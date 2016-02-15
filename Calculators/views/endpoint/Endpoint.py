@@ -1,6 +1,7 @@
 import os
 import ast
 import json
+import functools
 
 from Calculators import helpers
 from Calculators.models import Calculator, Tag
@@ -19,6 +20,28 @@ from flask.ext.classy import FlaskView, route
 from sqlalchemy import func, or_
 
 from voluptuous import Coerce, Schema, MultipleInvalid
+
+
+def validate_form_has_okay_id(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        got_id = Schema({'id': Coerce(int)}, required=True, extra=True)
+
+        try:
+            got_id(request.values)
+        except MultipleInvalid:
+            return Response(json.dumps(
+                {
+                    'message': 'You must include a calculator id in the POST '
+                    'data.'
+                }
+            )), 400
+
+        if not Calculator.query.get(cid):
+            return Response("Can't find calculator #{:}".format(cid)), 404
+
+        return f(*args, **kwargs)
+    return wrapper
 
 
 class Endpoint(FlaskView):
@@ -142,47 +165,21 @@ class Endpoint(FlaskView):
         return json.dumps(calculators)
 
     @route('/get_html_form_by_id', methods=['POST'])
+    @validate_form_has_okay_id
     def get_html_form_by_id(self):
         # TODO is it better to return rendered HTML, or a JSON dict for the JS
         # to create the form?
-
-        got_id = Schema({'id': Coerce(int)}, required=True, extra=True)
-
-        try:
-            okay_form = got_id(request.form)
-        except MultipleInvalid:
-            return Response(json.dumps(
-                {
-                    'message': 'You must include a calculator id in the POST '
-                    'data.'
-                }
-            )), 400
-
         return redirect(url_for('Index:calculator_permalink_0',
-                                cid=okay_form['id']))
+                                cid=request.form['id']))
 
     @route('/get_formula')
+    @validate_form_has_okay_id
     def get_formula(self):
-        got_id = Schema({'id': Coerce(int)}, required=True, extra=True)
-
-        try:
-            okay_form = got_id(request.values)
-        except MultipleInvalid:
-            return Response(json.dumps(
-                {
-                    'message': 'You must include a calculator id in the POST '
-                    'data.'
-                }
-            )), 400
-
-        cid = okay_form['id']
+        cid = request.values['id']
         calculator = Calculator.query.get(cid)
-
-        if not calculator:
-            return Response("Can't find calculator #{:}".format(cid)), 404
-
         template = os.path.join(current_app.root_path, 'templates', 'formulae',
                                 calculator.template)
+
         with open(template) as f:
             return json.dumps(
                 {
@@ -191,10 +188,10 @@ class Endpoint(FlaskView):
             )
 
     @route('/set_formula', methods=['POST'])
+    @validate_form_has_okay_id
     def set_formula(self):
-        got_id = Schema(
+        got_formula = Schema(
             {
-                'id': Coerce(int),
                 'formula': basestring
             },
             required=True,
@@ -202,7 +199,7 @@ class Endpoint(FlaskView):
         )
 
         try:
-            okay_form = got_id(request.values)
+            okay_form = got_formula(request.values)
         except MultipleInvalid:
             return Response(json.dumps(
                 {
@@ -211,16 +208,11 @@ class Endpoint(FlaskView):
                 }
             )), 400
 
-        cid = okay_form['id']
+        cid = request.form['id']
         calculator = Calculator.query.get(cid)
-
-        if not calculator:
-            return Response("Can't find calculator #{:}".format(cid)), 404
-
-        print okay_form
-
         template = os.path.join(current_app.root_path, 'templates', 'formulae',
                                 calculator.template)
+
         with open(template, 'w') as f:
             f.write(okay_form['formula'])
 
@@ -249,6 +241,7 @@ class Endpoint(FlaskView):
             name=okay_form['name'],
             template=okay_form['name'].lower().replace(' ', '_') + '.formula'
         )
+
         current_app.db.session.add(c)
         try:
             current_app.db.session.commit()
@@ -272,27 +265,16 @@ class Endpoint(FlaskView):
         })
 
     @route('/delete_formula', methods=['DELETE'])
+    @validate_form_has_okay_id
     def delete_formula(self):
-        got_id = Schema({'id': Coerce(int)}, required=True, extra=True)
+        c = Calculator.query.get(request.form['id'])
 
-        try:
-            okay_form = got_id(request.form)
-        except MultipleInvalid:
-            return Response(json.dumps(
-                {
-                    'message': 'You must include a calculator id in the POST '
-                    'data.'
-                }
-            )), 400
+        template = os.path.join(current_app.root_path, 'templates',
+                                'formulae', c.template)
+        os.remove(template)
 
-        c = Calculator.query.get(okay_form['id'])
-        if c:
-            template = os.path.join(current_app.root_path, 'templates',
-                                    'formulae', c.template)
-            os.remove(template)
-            Calculator.query.filter_by(id=okay_form['id']).delete()
-            current_app.db.session.commit()
+        Calculator.query.filter_by(id=request.form['id']).delete()
 
-            return 'Calculator #{:} deleted'.format(okay_form['id'])
+        current_app.db.session.commit()
 
-        return 'No calculator with id {:}'.format(okay_form['id'])
+        return 'Calculator #{:} deleted'.format(request.form['id'])
