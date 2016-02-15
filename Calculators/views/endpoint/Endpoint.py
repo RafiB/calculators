@@ -37,10 +37,45 @@ def validate_form_has_okay_id(f):
                 }
             )), 400
 
-        if not Calculator.query.get(cid):
-            return Response("Can't find calculator #{:}".format(cid)), 404
+        if not Calculator.query.get(request.values['id']):
+            return Response(
+                "Can't find calculator #{:}".format(request.values['id'])), 404
 
         return f(*args, **kwargs)
+    return wrapper
+
+
+def validate_form_has_okay_name(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        got_name = Schema({'name': basestring}, required=True, extra=True)
+
+        try:
+            got_name(request.form)
+        except MultipleInvalid:
+            return Response(json.dumps(
+                {
+                    'message': 'You must include a name in the PUT data.'
+                }
+            )), 400
+
+        return f(*args, **kwargs)
+    return wrapper
+
+
+def format_calculators(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        calculators = f(*args, **kwargs)
+
+        return json.dumps({
+            'results': [
+                {'id': c.id,
+                 'name': c.name,
+                 'link': url_for('Endpoint:get_calculator_variables', cid=c.id,
+                                 _external=True)} for c in calculators],
+            'size': len(calculators)
+        })
     return wrapper
 
 
@@ -95,18 +130,9 @@ class Endpoint(FlaskView):
         return render_template(template, **formula_vars)
 
     @route('/calculator')
+    @format_calculators
     def dump_calculators(self):
-        calculators = Calculator.query.all()
-
-        return json.dumps({
-            'results': [
-                {'id': c.id,
-                 'name': c.name,
-                 'link': url_for('Endpoint:get_calculator_variables', cid=c.id,
-                                 _external=True)
-                 } for c in calculators],
-            'size': len(calculators)
-        })
+        return Calculator.query.all()
 
     @route('/calculator/<int:cid>/variables')
     def get_calculator_variables(self, cid):
@@ -219,27 +245,12 @@ class Endpoint(FlaskView):
         return json.dumps({'message': 'Saved!'})
 
     @route('/new_formula', methods=['PUT'])
+    @validate_form_has_okay_name
+    @format_calculators
     def new_formula(self):
-        got_name = Schema(
-            {
-                'name': basestring
-            },
-            required=True,
-            extra=True
-        )
-
-        try:
-            okay_form = got_name(request.form)
-        except MultipleInvalid:
-            return Response(json.dumps(
-                {
-                    'message': 'You must include a name in the PUT data.'
-                }
-            )), 400
-
         c = Calculator(
-            name=okay_form['name'],
-            template=okay_form['name'].lower().replace(' ', '_') + '.formula'
+            name=request.form['name'],
+            template=request.form['name'].lower().replace(' ', '_') + '.formula'
         )
 
         current_app.db.session.add(c)
@@ -252,26 +263,9 @@ class Endpoint(FlaskView):
                 }
             )), 500
 
-        template = os.path.join(current_app.root_path, 'templates', 'formulae',
-                                c.template)
+        helpers.create_template_file(c.template)
 
-        with open(template, 'w+') as f:
-            f.write('''{% extends 'calculator.html' %}
-
-{%-
-set labels = {
-}
--%}
-
-{%- block formula -%}
-{{ labels if get_labels else 'formula' }}
-{%- endblock -%}''')
-
-        return json.dumps({
-            'name': c.name,
-            'formula': c.template,
-            'id': c.id
-        })
+        return [c]
 
     @route('/delete_formula', methods=['DELETE'])
     @validate_form_has_okay_id
