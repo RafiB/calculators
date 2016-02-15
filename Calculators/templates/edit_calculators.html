@@ -4,6 +4,9 @@
     {{ super() }}
     <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.3/ace.js'></script>
     <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js'></script>
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tokenfield/0.12.0/bootstrap-tokenfield.min.js'></script>
+    <link rel='stylesheet' type='text/css' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tokenfield/0.12.0/css/bootstrap-tokenfield.min.css' media='all'>
+    <link rel='stylesheet' type='text/css' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tokenfield/0.12.0/css/tokenfield-typeahead.min.css' media='all'>
 {% endblock %}
 
 {% block body %}
@@ -41,7 +44,7 @@
 
       <div id='editor-wrapper'>
         <div id='editor-tag-bar'>
-          Tagbar
+          <input id='tokenfield' type='text' class='form-control' placeholder='Tag'>
         </div>
 
         <div id='editor'></div>
@@ -54,12 +57,30 @@
     </div>
 
     <script type='text/javascript'>
+      var tag_engine = null;
       var editor = null;
       var formula = null;
       var loaded = null;
       var load_requested = null;
       var active_link = null;
       var deleting = null;
+
+      function update_tags () {
+        $('#editor').css('top',
+            parseInt($('#editor-tag-bar').css('padding-top').replace('px', '')) +
+            Math.max($('#editor-tag-bar').innerHeight(),
+              $('#editor-tag-bar .tokenfield').outerHeight())
+            );
+        editor.resize();
+
+        var tags = [];
+        $('.token-label').each(function () { tags.push($(this).text()) });
+
+        $.post('{{ url_for('Endpoint:set_tags') }}',
+            {id: loaded.data('id'),
+             tags: JSON.stringify(tags)}
+          );
+      }
 
       function create_list(calculators) {
         calculators.forEach(function (calculator) {
@@ -126,6 +147,12 @@
                 editor.getSession().setValue(data.template, -1);
                 editor.resize();
                 $('#editor-wrapper').show();
+
+                $('#tokenfield').tokenfield({
+                  typeahead: [null, { source: tag_engine.ttAdapter() }]
+                });
+
+                $('#tokenfield').tokenfield('setTokens', data.tags);
               }
             );
           }
@@ -138,6 +165,15 @@
       }
 
       $(function () {
+        tag_engine = new Bloodhound({
+          datumTokenizer: Bloodhound.tokenizers.whitespace,
+          queryTokenizer: Bloodhound.tokenizers.whitespace,
+          remote: {
+            url: '{{ url_for('Endpoint:search_tags', search='') }}' + '%QUERY',
+            wildcard: '%QUERY'
+          }
+        });
+
         $('#new-formula').click(function () {
           var name = $('#new-formula-name').val();
           if (!name) {
@@ -163,11 +199,14 @@
             $('#editor-wrapper').hide();
           }
         });
+
         $('.no-delete').click(function () {
           $('#confirm-delete').hide();
         });
 
         $('.save').click(function () {
+          update_tags();
+
           $.post('{{ url_for('Endpoint:set_formula') }}',
               {id: loaded.data('id'), formula: editor.getValue()},
               function () {

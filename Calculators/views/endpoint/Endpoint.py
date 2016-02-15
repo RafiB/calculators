@@ -51,7 +51,7 @@ def validate_form_has_template(f):
         got_formula = Schema({'formula': basestring}, required=True, extra=True)
 
         try:
-            okay_form = got_formula(request.values)
+            got_formula(request.values)
         except MultipleInvalid:
             return Response(json.dumps(
                 {
@@ -209,6 +209,16 @@ class Endpoint(FlaskView):
 
         return json.dumps(calculators)
 
+    @route('/seach_tags/<search>')
+    def search_tags(self, search):
+        search = search.lower()
+        tags = Tag.query.filter(func.lower(Tag.name).like('%'+search+'%')).all()
+
+        tags = [search] + sorted([tag.name for tag in tags
+                                  if tag.name != search])
+
+        return json.dumps(tags)
+
     @route('/get_html_form_by_id', methods=['POST'])
     @validate_form_has_okay_id
     def get_html_form_by_id(self):
@@ -228,9 +238,28 @@ class Endpoint(FlaskView):
         with open(template) as f:
             return json.dumps(
                 {
-                    'template': f.read().strip()
+                    'template': f.read().strip(),
+                    'tags': sorted([t.name for t in calculator.tags])
                 }
             )
+
+    @route('/set_tags', methods=['POST'])
+    @validate_form_has_okay_id
+    def set_tags(self):
+        cid = request.form['id']
+        calculator = Calculator.query.get(cid)
+        calculator.tags = set([])
+        for tag_text in json.loads(request.form.get('tags', '[]')):
+            tag = helpers.get_or_create(current_app.db.session, Tag,
+                                        name=tag_text)
+            calculator.tags.add(tag)
+
+        # Delete any tags that aren't associated with a calculator
+        Tag.query.filter(~Tag.calculators.any()).delete(
+            synchronize_session=False)
+
+        current_app.db.session.commit()
+        return 'Done', 200
 
     @route('/set_formula', methods=['POST'])
     @validate_form_has_okay_id
@@ -238,7 +267,8 @@ class Endpoint(FlaskView):
     def set_formula(self):
         cid = request.form['id']
         calculator = Calculator.query.get(cid)
-        helpers.write_template_file(calculator.template, formula=okay_form['formula'])
+        helpers.write_template_file(calculator.template,
+                                    formula=request.form['formula'])
 
         return json.dumps({'message': 'Saved!'})
 

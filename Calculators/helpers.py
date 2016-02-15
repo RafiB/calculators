@@ -68,3 +68,12 @@ set labels = {
 {%- endblock -%}'''
 
         f.write(formula)
+
+
+def get_or_create(session, model, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if not instance:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+    return instance

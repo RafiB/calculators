@@ -130,17 +130,56 @@ nav#calculator-list li.active {
 }
 
 #editor-tag-bar {
-  height: 5%;
-  min-height: 20px;
+  height: 10%;
   position: fixed;
   top: 0;
-  width: 100%;
+  width: 94%;
+  padding: 10px 10px 0;
+  z-index: 999;
+}
+
+#editor-tag-bar .tokenfield {
+  padding: 0;
+  min-height: 0;
+  border-color: white;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+#editor-tag-bar .tokenfield .token {
+  margin-bottom: 0;
+}
+
+#editor-tag-bar .twitter-typeahead {
+  top: -5px;
+}
+
+#editor-tag-bar .twitter-typeahead .tt-hint,
+#editor-tag-bar .twitter-typeahead .tt-input {
+  height: 25px;
+  padding: 4px 0 0;
+}
+
+#editor-tag-bar .tt-menu {
+  margin-top: 0;
+  padding: 0;
+  margin-top: 3px;
+}
+
+#editor-tag-bar .tt-menu .tt-suggestion {
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+#editor-tag-bar .tt-menu .tt-cursor {
+  color: white;
+  background-image: none;
 }
 
 #editor {
   position: fixed;
   width: 94%;
-  height: 80%;
+  top: 10%;
   bottom: 10%;
   font-size: 18px;
 }
