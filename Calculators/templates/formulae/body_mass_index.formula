@@ -8,5 +8,5 @@ set labels = {
 -%}
 
 {%- block formula -%}
-{{ labels if get_labels else (['Underweight']*18 + ['Normal']*7 + ['Overweight']*6 + ['Obese']*1000)[(weight / (height ** 2))|round|int], (weight / (height ** 2))|round|int }}
+{{ labels if get_labels else '%d (%s)' | format((weight / (height ** 2))|round|int, (['Underweight']*18 + ['Normal']*7 + ['Overweight']*6 + ['Obese']*1000)[(weight / (height ** 2))|round|int]) }}
 {%- endblock -%}

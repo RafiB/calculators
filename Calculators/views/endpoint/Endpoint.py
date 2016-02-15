@@ -1,6 +1,7 @@
 import os
 import ast
 import json
+import errno
 import functools
 
 from Calculators import helpers
@@ -182,7 +183,7 @@ class Endpoint(FlaskView):
         search_string = search_string.lower()
         search_tags = search_string.split()
 
-        cs = Calculator.query.filter(
+        calculators = Calculator.query.filter(
             or_(
                 or_(*[func.lower(Calculator.name).like('%'+t+'%')
                       for t in search_tags]),
@@ -200,7 +201,7 @@ class Endpoint(FlaskView):
                                   if tag in t.name.lower()])),
                 'id': c.id
             }
-            for c in cs]
+            for c in calculators]
 
         calculators = sorted(
             calculators,
@@ -248,7 +249,7 @@ class Endpoint(FlaskView):
     def set_tags(self):
         cid = request.form['id']
         calculator = Calculator.query.get(cid)
-        calculator.tags = set([])
+        calculator.tags.clear()  # = set([])
         for tag_text in json.loads(request.form.get('tags', '[]')):
             tag = helpers.get_or_create(current_app.db.session, Tag,
                                         name=tag_text)
@@ -276,12 +277,12 @@ class Endpoint(FlaskView):
     @validate_form_has_name
     @format_calculators
     def new_formula(self):
-        c = Calculator(
+        calculator = Calculator(
             name=request.form['name'],
             template=request.form['name'].lower().replace(' ', '_') + '.formula'
         )
 
-        current_app.db.session.add(c)
+        current_app.db.session.add(calculator)
         try:
             current_app.db.session.commit()
         except:
@@ -291,18 +292,22 @@ class Endpoint(FlaskView):
                 }
             )), 500
 
-        helpers.write_template_file(c.template)
+        helpers.write_template_file(calculator.template)
 
-        return [c]
+        return [calculator]
 
     @route('/delete_calculator', methods=['DELETE'])
     @validate_form_has_okay_id
     def delete_calculator(self):
-        c = Calculator.query.get(request.form['id'])
+        calculator = Calculator.query.get(request.form['id'])
 
         template = os.path.join(current_app.root_path, 'templates',
-                                'formulae', c.template)
-        os.remove(template)
+                                'formulae', calculator.template)
+        try:
+            os.remove(template)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
         Calculator.query.filter_by(id=request.form['id']).delete()
 
