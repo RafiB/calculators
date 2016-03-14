@@ -91,7 +91,7 @@
         var tags = $('#tokenfield').tagEditor('getTags')[0].tags;
 
         $.post('{{ url_for('Endpoint:set_tags') }}',
-            {id: calculator_list.get('name', loaded[0].outerText)[0]._values['id'],
+            {id: calculator_list.get('name', $.trim(loaded.text()))[0]._values['id'],
              tags: JSON.stringify(tags)}
           );
       }
@@ -137,7 +137,7 @@
             active_link = calc.parents('li').addClass('active');
 
             $.get('{{ url_for('Endpoint:get_formula') }}',
-              {id: calculator_list.get('name', calc[0].outerText)[0]._values['id']},
+              {id: calculator_list.get('name', $.trim(calc.text()))[0]._values['id']},
               function (data) {
                 data = JSON.parse(data);
 
@@ -216,7 +216,7 @@
           update_tags();
 
           $.post('{{ url_for('Endpoint:set_formula') }}',
-            {id: calculator_list.get('name', loaded[0].outerText)[0]._values['id'],
+            {id: calculator_list.get('name', $.trim(loaded.text()))[0]._values['id'],
               formula: editor.getValue()},
             function () {
               $('#saved').show();
